@@ -34,7 +34,7 @@ class UserManager(BaseUserManager):
 class User(AbstractBaseUser, PermissionsMixin):
 
     class Role(models.TextChoices):
-        BLK = "", "",
+        BLK = "0", "ADMIN",
         SLR = "1", "SELLER"
         SPT = "2", "SUPPORT"
 
