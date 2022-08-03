@@ -10,7 +10,7 @@ class UserCreationForm(forms.ModelForm):
 
     class Meta:
         model = User
-        fields = ('id', 'email', 'first_name', 'last_name', 'phone', 'role', 'is_active')
+        fields = ('id', 'email', 'role')
 
     def clean_password2(self):
         password1 = self.cleaned_data.get("password1")
@@ -30,7 +30,7 @@ class UserCreationForm(forms.ModelForm):
 class UserAdmin(admin.ModelAdmin):
 
     add_form = UserCreationForm
-    list_display = ['id', 'email', 'first_name', 'last_name', 'role', 'phone', 'date_created', 'date_updated', 'is_staff']
+    list_display = ['id', 'email', 'role', 'date_created', 'date_updated', 'is_staff']
 
 
 admin.site.register(User, UserAdmin)
