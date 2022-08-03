@@ -34,29 +34,24 @@ class UserManager(BaseUserManager):
 class User(AbstractBaseUser, PermissionsMixin):
 
     class Role(models.TextChoices):
-        BLK = "0", "ADMIN",
+        GST = "0", "GESTION",
         SLR = "1", "SELLER"
         SPT = "2", "SUPPORT"
 
     email = models.EmailField(max_length=100, unique=True)
-    first_name = models.CharField(max_length=25)
-    last_name = models.CharField(max_length=25)
-    phone = models.CharField(max_length=20)
     role = models.CharField(
         max_length=2,
         choices=Role.choices,
-        default=Role.BLK
     )
 
-    is_active = models.BooleanField(default=True)
-    is_staff = models.BooleanField(default=True)
+    is_staff = models.BooleanField(default=False)
     is_superuser = models.BooleanField(default=False)
 
     date_created = models.DateTimeField(auto_now_add=True)
     date_updated = models.DateTimeField(auto_now=True)
 
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['first_name', 'last_name']
+    REQUIRED_FIELDS = ['role']
 
     objects = UserManager()
 
