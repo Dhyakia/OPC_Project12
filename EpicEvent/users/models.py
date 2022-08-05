@@ -39,7 +39,6 @@ class User(AbstractBaseUser, PermissionsMixin):
         BLK = "0", "",
         SLR = "1", "SELLER"
         SPT = "2", "SUPPORT"
-        GST = "3", "GESTION"
 
     email = models.EmailField(max_length=100, unique=True)
     role = models.CharField(
