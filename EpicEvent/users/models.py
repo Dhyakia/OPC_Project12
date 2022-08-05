@@ -20,11 +20,13 @@ class UserManager(BaseUserManager):
         except:
             raise
 
+
     def create_user(self, email, password=None, **extra_fields):
-        extra_fields.setdefault('is_staff', True)
+        extra_fields.setdefault('is_staff', False)
         extra_fields.setdefault('is_superuser', False)
         return self._create_user(email, password, **extra_fields)
     
+
     def create_superuser(self, email, password=None, **extra_fields):
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
@@ -34,9 +36,10 @@ class UserManager(BaseUserManager):
 class User(AbstractBaseUser, PermissionsMixin):
 
     class Role(models.TextChoices):
-        GST = "0", "GESTION",
+        BLK = "0", "",
         SLR = "1", "SELLER"
         SPT = "2", "SUPPORT"
+        GST = "3", "GESTION"
 
     email = models.EmailField(max_length=100, unique=True)
     role = models.CharField(
