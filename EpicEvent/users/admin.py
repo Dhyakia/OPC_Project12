@@ -30,7 +30,7 @@ class UserCreationForm(forms.ModelForm):
 class UserAdmin(admin.ModelAdmin):
 
     add_form = UserCreationForm
-    list_display = ['id', 'email', 'role', 'date_created', 'date_updated', 'is_staff']
+    list_display = ['id', 'email', 'role', 'date_created', 'date_updated', 'is_staff', 'is_superuser']
 
 
 admin.site.register(User, UserAdmin)
