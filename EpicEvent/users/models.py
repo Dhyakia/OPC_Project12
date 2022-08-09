@@ -43,7 +43,7 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     email = models.EmailField(max_length=100, unique=True)
     role = models.CharField(
-        max_length=2,
+        max_length=1,
         choices=Role.choices,
     )
 
@@ -54,7 +54,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     date_updated = models.DateTimeField(auto_now=True)
 
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['role']
+    REQUIRED_FIELDS = ['password', 'role']
 
     objects = UserManager()
 
