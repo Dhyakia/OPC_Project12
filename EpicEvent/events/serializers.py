@@ -20,5 +20,5 @@ class ContractSerializer(serializers.ModelSerializer):
 class EventSerializer(serializers.ModelSerializer):
 
     class Meta(object):
-        modele = Event
+        model = Event
         fields = ('id', 'notes', 'event_status', 'client', 'support_contact')
