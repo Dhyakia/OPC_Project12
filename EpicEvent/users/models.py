@@ -1,3 +1,4 @@
+from django import forms
 from django.db import models, transaction
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 
@@ -45,7 +46,6 @@ class User(AbstractBaseUser, PermissionsMixin):
     role = models.CharField(max_length=1, choices=Role.choices,)
 
     # optional
-
     # auto_add
     is_staff = models.BooleanField(default=False)
     is_superuser = models.BooleanField(default=False)
