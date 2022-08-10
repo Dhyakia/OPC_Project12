@@ -9,6 +9,7 @@ from users.models import User
 
 class UsersViewset(ModelViewSet):
 
+    # All perm here are under: isAdminUser
     permission_classes = [IsAdminUser]
     serializer_class = UserSerializer
     queryset = User.objects.all()
