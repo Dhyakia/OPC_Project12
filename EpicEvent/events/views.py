@@ -14,11 +14,15 @@ class ClientsViewset(ModelViewSet):
     queryset = Client.objects.all()
     
     def list(self, request):
+        # perm: admin / seller / support
+
         query_client = Client.objects.all()
         serializer_client = ClientSerializer(query_client, many=True)
         return Response(serializer_client.data, status.HTTP_200_OK)
 
     def create(self, request):
+        # perm: admin / seller
+
         client = request.data
         serializer_client = ClientSerializer(data=client)
 
@@ -27,11 +31,15 @@ class ClientsViewset(ModelViewSet):
             return Response(serializer_client.data, status.HTTP_201_CREATED)
 
     def retrieve(self, request, pk=None):
+        # perm: admin / seller (sales_contact=current_user)
+        
         query_client = Client.objects.get(id=pk)
         serializer_client = ClientSerializer(query_client)
         return Response(serializer_client.data, status.HTTP_200_OK)
 
     def update(self, request, pk=None):
+        # perm: admin / seller (sales_contact=current_user)
+
         if Client.objects.filter(id=pk).exists():
             query_client = Client.objects.filter(id=pk)
             new_contact_info = request.data['contact_info']
@@ -51,6 +59,8 @@ class ClientsViewset(ModelViewSet):
             return Response(message, status.HTTP_404_NOT_FOUND)
 
     def destroy(self, request, pk=None):
+        # perm: admin
+    
         if Client.objects.filter(id=pk).exists():
             query_client = Client.objects.filter(id=pk)
             query_client.delete()
@@ -69,11 +79,15 @@ class ContractsViewset(ModelViewSet):
     queryset = Contract.objects.all()
 
     def list(self, request):
+        # perm: admin / seller
+
         query_contract = Contract.objects.all()
         seriallizer_contract = ContractSerializer(query_contract, many=True)
         return Response(seriallizer_contract.data, status.HTTP_200_OK)
 
     def create(self, request):
+        # perm: admin / seller
+        
         contract = request.data
         serializer_contract = ContractSerializer(data=contract)
 
@@ -82,11 +96,15 @@ class ContractsViewset(ModelViewSet):
             return Response(serializer_contract.data, status.HTTP_201_CREATED)
 
     def retrieve(self, request, pk=None):
+        # perm: admin / seller (sales_contact=current_user)
+        
         query_contract = Contract.objects.get(id=pk)
         serializer_contract = ContractSerializer(query_contract)
         return Response(serializer_contract.data, status.HTTP_200_OK)
 
     def update(self, request, pk=None):
+        # perm: admin / seller (sales_contact=current_user)
+
         if Contract.objects.filter(id=pk).exists():
             query_contract = Contract.objects.filter(id=pk)
             new_amount = request.data["amount"]
@@ -106,6 +124,8 @@ class ContractsViewset(ModelViewSet):
             return Response(message, status.HTTP_404_NOT_FOUND)
 
     def destroy(self, request, pk=None):
+        # perm: admin
+
         if Contract.objects.filter(id=pk).exists():
             query_contract = Contract.objects.filter(id=pk)
             query_contract.delete()
@@ -124,11 +144,15 @@ class EventsViewset(ModelViewSet):
     queryset = Event.objects.all()
 
     def list(self, request):
+        # perm: admin / seller / support
+
         query_event = Event.objects.all()
         serializer_event = EventSerializer(query_event, many=True)
         return Response(serializer_event.data, status.HTTP_200_OK)
 
     def create(self, request):
+        # perm: admin / seller
+
         event = request.data
         serializer_event = EventSerializer(data=event)
 
@@ -137,11 +161,15 @@ class EventsViewset(ModelViewSet):
             return Response(serializer_event.data, status.HTTP_201_CREATED)
 
     def retrieve(self, request, pk=None):
+        # perm: admin / support (support_contact=current_user)
+
         query_event = Event.objects.get(id=pk)
         serializer_event = EventSerializer(query_event)
         return Response(serializer_event.data, status.HTTP_200_OK)
 
     def update(self, request, pk=None):
+        # perm: admin / support (support_contact=current_user)
+
         if Event.objects.filter(id=pk).exists():
             query_event = Event.objects.filter(id=pk)
             new_notes = request.data['notes']
@@ -162,6 +190,8 @@ class EventsViewset(ModelViewSet):
             return Response(message, status.HTTP_404_NOT_FOUND)
 
     def destroy(self, request, pk=None):
+        # perm: admin
+        
         if Event.objects.filter(id=pk).exists():
             query_event = Event.objects.filter(id=pk)
             query_event.delete()
