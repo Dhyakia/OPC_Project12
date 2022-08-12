@@ -2,6 +2,9 @@ from rest_framework import status
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.filters import SearchFilter, OrderingFilter
+
+from django_filters.rest_framework import DjangoFilterBackend
 
 from events.models import Client, Contract, Event
 from events.serializers import ClientSerializer, ContractSerializer, EventSerializer
@@ -12,18 +15,28 @@ SUPPORT = "2"
 
 class ClientsViewset(ModelViewSet):
 
-    permission_classes = [IsAuthenticated]
-    serializer_class = ClientSerializer
     queryset = Client.objects.all()
+    serializer_class = ClientSerializer
+    permission_classes = [IsAuthenticated]
     
+    # Filters
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_fields = ['is_client']
+    search_fields = ['id', 'contact_info', 'is_client']
+    ordering_fields = ['id']
+    ordering = ['id']
+
     def list(self, request):
         # perm: admin / seller / support
         user = self.request.user
+        queryset = self.filter_queryset(self.get_queryset()).filter()
 
         if user.is_superuser or user.role == SELLER or user.role == SUPPORT:
-            query_client = Client.objects.all()
-            serializer_client = ClientSerializer(query_client, many=True)
+            serializer_client = self.serializer_class(queryset, many=True)
             return Response(serializer_client.data, status.HTTP_200_OK)
+        
+        message = "Permission refusé"
+        return Response(message, status.HTTP_403_FORBIDDEN)
 
     def create(self, request):
         # perm: admin / seller
@@ -31,26 +44,47 @@ class ClientsViewset(ModelViewSet):
 
         if user.is_superuser or user.role == SELLER:
             client = request.data
-            serializer_client = ClientSerializer(data=client)
+            serializer_client = self.serializer_class(data=client)
 
             if serializer_client.is_valid(raise_exception=True):
                 serializer_client.save()
                 return Response(serializer_client.data, status.HTTP_201_CREATED)
+        
+        message = "Permission refusé"
+        return Response(message, status.HTTP_403_FORBIDDEN)
 
     def retrieve(self, request, pk=None):
         # perm: admin / seller (sales_contact=current_user)
         user = self.request.user
 
         if user.is_superuser or user.role == SELLER:
+            if user.role == SELLER:
+                if Client.objects.filter(id=pk, sales_contact=user.id).exists():
+                    pass
+                else:
+                    message = "Ce client ne vous ais pas attribué"
+                    return Response(message, status.HTTP_403_FORBIDDEN)
+
             query_client = Client.objects.get(id=pk)
-            serializer_client = ClientSerializer(query_client)
-            return Response(serializer_client.data, status.HTTP_200_OK)
+            serializer_client = self.serializer_class(query_client)
+            return Response(serializer_client.data, status.HTTP_200_OK)                
+
+        else:
+            message = "Permission refusé"
+            return Response(message, status.HTTP_403_FORBIDDEN)
 
     def update(self, request, pk=None):
         # perm: admin / seller (sales_contact=current_user)
         user = self.request.user
 
         if user.is_superuser or user.role == SELLER:
+            if user.role == SELLER:
+                if Client.objects.filter(id=pk, sales_contact=user.id).exists():
+                    pass
+                else:
+                    message = "Ce client ne vous ais pas attribué"
+                    return Response(message, status.HTTP_403_FORBIDDEN)
+
             if Client.objects.filter(id=pk).exists():
                 query_client = Client.objects.filter(id=pk)
                 new_contact_info = request.data['contact_info']
@@ -62,12 +96,16 @@ class ClientsViewset(ModelViewSet):
                     is_client=new_is_client,
                     sales_contact=new_sales_contact
                 )
-                serializer_client = ClientSerializer(query_client, many=True)
+                serializer_client = self.serializer_class(query_client, many=True)
                 return Response(serializer_client.data, status.HTTP_202_ACCEPTED)
 
             else:
                 message = "Pas ou plus d'utilisateur à cette adresse"
                 return Response(message, status.HTTP_404_NOT_FOUND)
+        
+        else:
+            message = "Permission refusé"
+            return Response(message, status.HTTP_403_FORBIDDEN)
 
     def destroy(self, request, pk=None):
         # perm: admin
@@ -84,21 +122,37 @@ class ClientsViewset(ModelViewSet):
                 message = "Pas ou plus de client à cette adresse"
                 return Response(message, status.HTTP_404_NOT_FOUND)
 
+        else:
+            message = "Permission refusé"
+            return Response(message, status.HTTP_403_FORBIDDEN)
+
 
 class ContractsViewset(ModelViewSet):
 
-    permission_classes = [IsAuthenticated]
-    serializer_class = ContractSerializer
     queryset = Contract.objects.all()
+    serializer_class = ContractSerializer
+    permission_classes = [IsAuthenticated]
+
+    # Filters
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_fields = ['amount']
+    search_fields = ['id', 'contract_status']
+    ordering_fields = ['id']
+    ordering = ['id']
+
 
     def list(self, request):
         # perm: admin / seller
         user = self.request.user
+        queryset = self.filter_queryset(self.get_queryset()).filter()
 
         if user.is_superuser or user.role == SELLER:
-            query_contract = Contract.objects.all()
-            seriallizer_contract = ContractSerializer(query_contract, many=True)
+            seriallizer_contract = ContractSerializer(queryset, many=True)
             return Response(seriallizer_contract.data, status.HTTP_200_OK)
+
+        else:
+            message = "Permission refusé"
+            return Response(message, status.HTTP_403_FORBIDDEN)
 
     def create(self, request):
         # perm: admin / seller
@@ -111,21 +165,43 @@ class ContractsViewset(ModelViewSet):
             if serializer_contract.is_valid(raise_exception=True):
                 serializer_contract.save()
                 return Response(serializer_contract.data, status.HTTP_201_CREATED)
+        
+        else:
+            message = "Permission refusé"
+            return Response(message, status.HTTP_403_FORBIDDEN)
 
     def retrieve(self, request, pk=None):
         # perm: admin / seller (sales_contact=current_user)
         user = self.request.user
 
         if user.is_superuser or user.role == SELLER:
+            if user.role == SELLER:
+                if Contract.objects.filter(id=pk, sales_contact=user.id).exists():
+                    pass
+                else:
+                    message = "Ce contrat ne vous ais pas attribué"
+                    return Response(message, status.HTTP_403_FORBIDDEN)
+
             query_contract = Contract.objects.get(id=pk)
             serializer_contract = ContractSerializer(query_contract)
             return Response(serializer_contract.data, status.HTTP_200_OK)
+
+        else:
+            message = "Permission refusé"
+            return Response(message, status.HTTP_403_FORBIDDEN)
 
     def update(self, request, pk=None):
         # perm: admin / seller (sales_contact=current_user)
         user = self.request.user
 
         if user.is_superuser or user.role == SELLER:
+            if user.role == SELLER:
+                if Contract.objects.filter(id=pk, sales_contact=user.id).exists():
+                    pass
+                else:
+                    message = "Ce contrat ne vous ais pas attribué"
+                    return Response(message, status.HTTP_403_FORBIDDEN)
+
             if Contract.objects.filter(id=pk).exists():
                 query_contract = Contract.objects.filter(id=pk)
                 new_amount = request.data["amount"]
@@ -144,6 +220,10 @@ class ContractsViewset(ModelViewSet):
                 message = "Pas ou plus d'utilisateur à cette adresse"
                 return Response(message, status.HTTP_404_NOT_FOUND)
 
+        else:
+            message = "Permission refusé"
+            return Response(message, status.HTTP_403_FORBIDDEN)
+
     def destroy(self, request, pk=None):
         # perm: admin
         user = self.request.user
@@ -158,22 +238,38 @@ class ContractsViewset(ModelViewSet):
             else:
                 message = "Pas ou plus de contrat à cette adresse"
                 return Response(message, status.HTTP_404_NOT_FOUND)
+            
+        else:
+            message = "Permission refusé"
+            return Response(message, status.HTTP_403_FORBIDDEN)
 
 
 class EventsViewset(ModelViewSet):
 
-    permission_classes = [IsAuthenticated]
-    serializer_class = EventSerializer
     queryset = Event.objects.all()
+    serializer_class = EventSerializer
+    permission_classes = [IsAuthenticated]    
+
+    # Filters
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_fields = ['event_status']
+    search_fields = ['id', 'notes']
+    ordering_fields = ['id']
+    ordering = ['id']
+
 
     def list(self, request):
         # perm: admin / seller / support
         user = self.request.user
+        queryset = self.filter_queryset(self.get_queryset()).filter()
 
         if user.is_superuser or user.role == SELLER or user.role == SUPPORT:
-            query_event = Event.objects.all()
-            serializer_event = EventSerializer(query_event, many=True)
+            serializer_event = EventSerializer(queryset, many=True)
             return Response(serializer_event.data, status.HTTP_200_OK)
+        
+        else:
+            message = "Permission refusé"
+            return Response(message, status.HTTP_403_FORBIDDEN)
 
     def create(self, request):
         # perm: admin / seller
@@ -187,20 +283,42 @@ class EventsViewset(ModelViewSet):
                 serializer_event.save()
                 return Response(serializer_event.data, status.HTTP_201_CREATED)
 
+        else:
+            message = "Permission refusé"
+            return Response(message, status.HTTP_403_FORBIDDEN)
+
     def retrieve(self, request, pk=None):
         # perm: admin / support (support_contact=current_user)
         user = self.request.user
 
         if user.is_superuser or user.role == SUPPORT:
+            if user.role == SUPPORT:
+                if Event.objects.filter(id=pk, support_contact=user.id).exists():
+                    pass
+                else:
+                    message = "Cet evenement ne vous ais pas attribué"
+                    return Response(message, status.HTTP_403_FORBIDDEN)
+
             query_event = Event.objects.get(id=pk)
             serializer_event = EventSerializer(query_event)
             return Response(serializer_event.data, status.HTTP_200_OK)
+
+        else:
+            message = "Permission refusé"
+            return Response(message, status.HTTP_403_FORBIDDEN)
 
     def update(self, request, pk=None):
         # perm: admin / support (support_contact=current_user)
         user = self.request.user
 
         if user.is_superuser or user.role == SUPPORT:
+            if user.role == SUPPORT:
+                if Event.objects.filter(id=pk, support_contact=user.id).exists():
+                    pass
+                else:
+                    message = "Cet evenement ne vous ais pas attribué"
+                    return Response(message, status.HTTP_403_FORBIDDEN)
+
             if Event.objects.filter(id=pk).exists():
                 query_event = Event.objects.filter(id=pk)
                 new_notes = request.data['notes']
@@ -220,11 +338,15 @@ class EventsViewset(ModelViewSet):
                 message = "Pas ou plus d'utilisateur à cette adresse"
                 return Response(message, status.HTTP_404_NOT_FOUND)
 
+        else:
+            message = "Permission refusé"
+            return Response(message, status.HTTP_403_FORBIDDEN)
+
     def destroy(self, request, pk=None):
         # perm: admin
         user = self.request.user
 
-        if user.is_superuser or user.role == SELLER or user.role == SUPPORT:
+        if user.is_superuser:
             if Event.objects.filter(id=pk).exists():
                 query_event = Event.objects.filter(id=pk)
                 query_event.delete()
@@ -234,3 +356,7 @@ class EventsViewset(ModelViewSet):
             else:
                 message = "Pas ou plus d'évenement à cette adresse"
                 return Response(message, status.HTTP_404_NOT_FOUND)
+        
+        else:
+            message = "Permission refusé"
+            return Response(message, status.HTTP_403_FORBIDDEN)
